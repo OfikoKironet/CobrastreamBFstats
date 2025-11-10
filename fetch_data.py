@@ -1,36 +1,30 @@
 import requests
 import json
 import os
+# ...
 
 API_URL = "https://api.tracker.gg/api/v2/bf6/standard/profile/steam/3000691765"
 OUTPUT_FILE = "data.json"
 
-# *** NOVÉ: Definice hlaviček pro imitaci prohlížeče ***
+# *** NOVÉ: Mnohem realističtější hlavičky prohlížeče (Chrome/Edge) ***
 HEADERS = {
-    # Můžeš použít libovolný řetězec, který imituje standardní prohlížeč.
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    # Použijeme User-Agent pro novější Chrome, který je často aktualizovaný
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36 Edg/126.0.0.0',
+    'Accept': 'application/json, text/plain, */*', # Standardní hodnota prohlížeče
+    'Accept-Language': 'cs,en-US;q=0.7,en;q=0.3', # Jazyky, které prohlížeč preferuje (česky a anglicky)
+    'Accept-Encoding': 'gzip, deflate, br', # Říkáme, že umíme přijmout komprimovaná data
+    'Referer': 'https://tracker.gg/', # Imitujeme, že požadavek přichází z domény tracker.gg
+    'Connection': 'keep-alive', # Udržuje spojení aktivní
+    # Někdy je potřeba i:
+    'Sec-Fetch-Dest': 'empty',
+    'Sec-Fetch-Mode': 'cors',
+    'Sec-Fetch-Site': 'same-site',
+    'TE': 'trailers'
 }
 
 try:
-    # Provede GET požadavek na API s přidanými hlavičkami
-    response = requests.get(API_URL, headers=HEADERS) # *** ZMĚNA ZDE ***
-    response.raise_for_status() # Vyhodí chybu pro špatné stavové kódy (4xx nebo 5xx)
-
-    # ... zbytek kódu ...
-
-    # Získá JSON data
-    data = response.json()
+    # Provede GET požadavek na API s realističtějšími hlavičkami
+    response = requests.get(API_URL, headers=HEADERS) 
+    response.raise_for_status() # Stále se spoléháme na to, že chybu 403 vyhodí zde.
     
-    # Uloží JSON do souboru
-    with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
-        json.dump(data, f, indent=4) 
-
-    print(f"Data úspěšně stažena a uložena do {OUTPUT_FILE}")
-
-except requests.exceptions.RequestException as e:
-    # Zde ti bude chybová hláška (včetně status kódu)
-    print(f"Chyba při stahování dat z API: {e}") 
-    exit(1)
-except Exception as e:
-    print(f"Došlo k chybě: {e}")
-    exit(1)
+    # ... zbytek kódu ...
