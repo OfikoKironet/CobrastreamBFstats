@@ -1,20 +1,24 @@
-name: Aktualizace dat z API
+name: Automatická aktualizace statistik (Playwright)
 
 on:
+  # Spustí se denně o půlnoci UTC (což odpovídá 1:00 nebo 2:00 ráno SEČ/SELČ)
   schedule:
     - cron: '0 0 * * *'
+  # Umožní ruční spuštění z GitHub Actions záložky
   workflow_dispatch:
 
 jobs:
   fetch-and-update:
-    # Použijeme větší stroj, protože Playwright je náročnější
+    # Použijeme standardní virtuální stroj
     runs-on: ubuntu-latest
+    
     steps:
     
-    # 1. Checkout kódu
+    # 1. Stáhnutí kódu repozitáře
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
+        # Potřebné pro finální commit změn
         token: ${{ secrets.GITHUB_TOKEN }} 
 
     # 2. Nastavení Pythonu
@@ -27,17 +31,27 @@ jobs:
     - name: Install Python dependencies
       run: pip install -r requirements.txt
       
-    # 4. *** NOVÝ KROK: Instalace Playwright prohlížečů ***
-    - name: Install Playwright browsers
-      run: playwright install chromium
+    # 4. Instalace systémových závislostí pro Playwright
+    # Tento krok je klíčový pro headless prohlížeče na Ubuntu
+    - name: Install Playwright system dependencies
+      run: sudo apt-get update && sudo apt-get install -y libnss3 libnspr4 libdbus-1-3 libevent-core-2.1-7 libevent-pthreads-2.1-7 libfontconfig1 libglib2.0-0 libgtk-3-0 libatk1.0-0 libgdk-pixbuf2.0-0 libnotify4 libxtst6 libxkbcommon-x11-0 libxrandr2 libxi6
+
+    # 5. Instalace samotného prohlížeče Firefox
+    - name: Install Playwright browser (Firefox)
+      # V kódu fetch_data.py používáme Firefox pro snížení detekce
+      run: playwright install firefox
       
-    # 5. Spuštění stahovacího skriptu
-    - name: Run data fetching script (using Playwright)
+    # 6. Spuštění stahovacího skriptu
+    - name: Run data fetching script (using Playwright/Firefox)
       run: python fetch_data.py
 
-    # 6. Commit a push změn
+    # 7. Commit a push změn do repozitáře
     - name: Commit and push changes
       uses: stefanzweifel/git-auto-commit-action@v5
       with:
         commit_message: '🤖 Automatická aktualizace dat z API (Playwright)'
+        # Uloží pouze nově stažený soubor data.json
         files: 'data.json'
+        # Nastavení jména a emailu pro commit
+        commit_user_name: 'GitHub Actions Bot'
+        commit_user_email: 'actions@github.com'
