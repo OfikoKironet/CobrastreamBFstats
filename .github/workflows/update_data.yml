@@ -1,0 +1,44 @@
+name: Aktualizace dat z API
+
+on:
+  # Spustí se denně v 0:00 UTC
+  schedule:
+    - cron: '0 0 * * *'
+  # Umožní ruční spuštění z GitHub Actions záložky
+  workflow_dispatch:
+
+jobs:
+  fetch-and-update:
+    runs-on: ubuntu-latest
+    steps:
+    
+    # 1. Checkout kódu
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        # Potřebné pro commit, nastavení tokenu
+        token: ${{ secrets.GITHUB_TOKEN }} 
+
+    # 2. Nastavení Pythonu
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x' 
+
+    # 3. Instalace závislostí
+    - name: Install dependencies
+      run: pip install -r requirements.txt
+
+    # 4. Spuštění stahovacího skriptu
+    - name: Run data fetching script
+      run: python fetch_data.py
+
+    # 5. Commit a push změn
+    # Tato akce zařídí, že se nově stažený data.json soubor
+    # uloží do repozitáře, což aktualizuje i GitHub Pages.
+    - name: Commit and push changes
+      uses: stefanzweifel/git-auto-commit-action@v5
+      with:
+        commit_message: '🤖 Automatická aktualizace dat z API'
+        # Soubory, které se mají commitnout
+        files: 'data.json'
