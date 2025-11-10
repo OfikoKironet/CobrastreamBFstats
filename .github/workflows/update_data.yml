@@ -1,14 +1,13 @@
 name: Aktualizace dat z API
 
 on:
-  # Spustí se denně v 0:00 UTC
   schedule:
     - cron: '0 0 * * *'
-  # Umožní ruční spuštění z GitHub Actions záložky
   workflow_dispatch:
 
 jobs:
   fetch-and-update:
+    # Použijeme větší stroj, protože Playwright je náročnější
     runs-on: ubuntu-latest
     steps:
     
@@ -16,7 +15,6 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-        # Potřebné pro commit, nastavení tokenu
         token: ${{ secrets.GITHUB_TOKEN }} 
 
     # 2. Nastavení Pythonu
@@ -25,20 +23,21 @@ jobs:
       with:
         python-version: '3.x' 
 
-    # 3. Instalace závislostí
-    - name: Install dependencies
+    # 3. Instalace závislostí Pythonu (requests, playwright)
+    - name: Install Python dependencies
       run: pip install -r requirements.txt
-
-    # 4. Spuštění stahovacího skriptu
-    - name: Run data fetching script
+      
+    # 4. *** NOVÝ KROK: Instalace Playwright prohlížečů ***
+    - name: Install Playwright browsers
+      run: playwright install chromium
+      
+    # 5. Spuštění stahovacího skriptu
+    - name: Run data fetching script (using Playwright)
       run: python fetch_data.py
 
-    # 5. Commit a push změn
-    # Tato akce zařídí, že se nově stažený data.json soubor
-    # uloží do repozitáře, což aktualizuje i GitHub Pages.
+    # 6. Commit a push změn
     - name: Commit and push changes
       uses: stefanzweifel/git-auto-commit-action@v5
       with:
-        commit_message: '🤖 Automatická aktualizace dat z API'
-        # Soubory, které se mají commitnout
+        commit_message: '🤖 Automatická aktualizace dat z API (Playwright)'
         files: 'data.json'
