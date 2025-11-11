@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BF6 Stats z GitHub Actions</title>
+</head>
+<body>
+    <h1>Statistiky Battlefield 6</h1>
+    <pre id="stats-output">Načítám...</pre>
+
+    <script>
+        // Data se načítají z lokálního souboru, commitnutého GitHub Actions.
+        // Tím se NEVOLÁ API PŘÍMO z prohlížeče!
+        fetch('data/bf6_stats.json')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Soubor s daty nebyl nalezen.");
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Zde můžeš data zpracovat a zobrazit hezky, 
+                // nyní je jen zobrazíme v surové formě
+                document.getElementById('stats-output').textContent = JSON.stringify(data, null, 2);
+            })
+            .catch(error => {
+                document.getElementById('stats-output').textContent = `Chyba: ${error.message}`;
+            });
+    </script>
+</body>
+</html>
